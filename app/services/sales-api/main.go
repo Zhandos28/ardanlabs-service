@@ -1,0 +1,45 @@
+package main
+
+import (
+	"context"
+	"github.com/Zhandos28/ardanlabs-service/foundation/logger"
+	"os"
+	"os/signal"
+	"runtime"
+	"syscall"
+)
+
+func main() {
+	var log *logger.Logger
+
+	events := logger.Events{
+		Error: func(ctx context.Context, r logger.Record) {
+			log.Info(ctx, "********* SEND ALERT *********")
+		},
+	}
+
+	traceIDFunc := func(ctx context.Context) string {
+		return ""
+	}
+
+	log = logger.NewWithEvents(os.Stdout, logger.LevelInfo, "SALES-INFO", traceIDFunc, events)
+	ctx := context.Background()
+
+	if err := run(ctx, log); err != nil {
+		log.Error(ctx, "startup", "msg", err)
+		return
+	}
+}
+
+func run(ctx context.Context, log *logger.Logger) error {
+	log.Info(ctx, "startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
+
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, syscall.SIGINT, os.Interrupt)
+	sig := <-shutdown
+
+	log.Info(ctx, "shutdown", "status", "shutdown started", "signal", sig)
+	defer log.Info(ctx, "shutdown", "status", "shutdown complete", "signal", sig)
+
+	return nil
+}
