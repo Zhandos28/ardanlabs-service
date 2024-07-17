@@ -54,7 +54,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 			IdleTimeout     time.Duration `conf:"default:120s"`
 			ShutdownTimeout time.Duration `conf:"default:20s,mask"`
 			APIHost         string        `conf:"default:0.0.0.0:3000"`
-			DebugHost       string        `conf:"default:0.0.0.0:4002"`
+			DebugHost       string        `conf:"default:0.0.0.0:4000"`
 		}
 		Auth struct {
 			KeysFolder string `conf:"default:zarf/keys/"`
