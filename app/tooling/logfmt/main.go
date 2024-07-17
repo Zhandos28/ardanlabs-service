@@ -29,6 +29,9 @@ func main() {
 
 		m := make(map[string]any)
 		err := json.Unmarshal([]byte(s), &m)
+		if service == "" {
+			fmt.Println(s)
+		}
 		if err != nil {
 			if service == "" {
 				fmt.Println(s)
@@ -78,7 +81,6 @@ func main() {
 		out := b.String()
 		fmt.Println(out[:len(out)-2])
 	}
-
 	if err := scanner.Err(); err != nil {
 		log.Println(err)
 	}
