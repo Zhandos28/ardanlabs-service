@@ -1,10 +1,12 @@
 package hackgrp
 
 import (
-	"github.com/dimfeld/httptreemux/v5"
+	v1 "github.com/Zhandos28/ardanlabs-service/business/web/v1"
+	"github.com/Zhandos28/ardanlabs-service/foundation/web"
 	"net/http"
 )
 
-func Routes(mux *httptreemux.ContextMux) {
-	mux.Handle(http.MethodGet, "/hack", Hack)
+func Routes(app *web.App, apiCfg v1.APIMuxConfig) {
+	//log := mid.Logger(apiCfg.Log)
+	app.Handle(http.MethodGet, "", "/hack", Hack)
 }

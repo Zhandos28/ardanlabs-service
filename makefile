@@ -17,7 +17,7 @@ run-help:
 	go run app/services/sales-api/main.go --help | go run app/tooling/logfmt/main.go
 
 curl:
-	curl -il http://localhost:3000/v1/hack
+	curl -il http://localhost:3000/hack
 
 curl-auth:
 	curl -il -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/hackauth

@@ -1,16 +1,22 @@
 package hackgrp
 
 import (
+	"context"
 	"encoding/json"
+	"github.com/Zhandos28/ardanlabs-service/foundation/web"
 	"net/http"
 )
 
-func Hack(w http.ResponseWriter, r *http.Request) {
+func Hack(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	status := struct {
 		Status string `json:"status"`
 	}{
 		Status: "OK",
 	}
 
-	json.NewEncoder(w).Encode(status)
+	if err := json.NewEncoder(w).Encode(status); err != nil {
+		return err
+	}
+
+	return web.Respond(ctx, w, status, http.StatusOK)
 }
