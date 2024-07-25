@@ -17,7 +17,7 @@ run-help:
 	go run app/services/sales-api/main.go --help | go run app/tooling/logfmt/main.go
 
 curl:
-	curl -il http://localhost:3000/hack
+	curl -il http://localhost:3000/v1/hack
 
 curl-auth:
 	curl -il -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/hackauth
@@ -109,6 +109,9 @@ dev-update-apply: all dev-load dev-apply
 
 dev-logs:
 	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) --all-containers=true -f --tail=100 --max-log-requests=6 | go run app/tooling/logfmt/main.go -service=$(SERVICE_NAME)
+
+dev-logs-without-prettier:
+	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) --all-containers=true -f --tail=100 --max-log-requests=6
 
 dev-describe-deployment:
 	kubectl describe deployment --namespace=$(NAMESPACE) $(APP)

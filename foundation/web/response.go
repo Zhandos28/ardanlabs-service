@@ -10,9 +10,11 @@ import (
 func Respond(ctx context.Context, w http.ResponseWriter, data any, statusCode int) error {
 	SetStatusCode(ctx, statusCode)
 
-	if statusCode == http.StatusNoContent {
+	if statusCode != http.StatusOK {
 		w.WriteHeader(statusCode)
-		return nil
+		if statusCode == http.StatusNoContent {
+			return nil
+		}
 	}
 
 	jsonData, err := json.Marshal(data)
@@ -21,7 +23,6 @@ func Respond(ctx context.Context, w http.ResponseWriter, data any, statusCode in
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
 
 	if _, err := w.Write(jsonData); err != nil {
 		return err

@@ -7,15 +7,19 @@ import (
 	"fmt"
 	"github.com/Zhandos28/ardanlabs-service/app/services/sales-api/v1/handlers"
 	v1 "github.com/Zhandos28/ardanlabs-service/business/web/v1"
+	"github.com/Zhandos28/ardanlabs-service/business/web/v1/auth"
 	"github.com/Zhandos28/ardanlabs-service/business/web/v1/debug"
+	"github.com/Zhandos28/ardanlabs-service/foundation/keystore"
 	"github.com/Zhandos28/ardanlabs-service/foundation/logger"
-	"github.com/ardanlabs/conf/v3"
+	"github.com/Zhandos28/ardanlabs-service/foundation/web"
 	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
 	"syscall"
 	"time"
+
+	"github.com/ardanlabs/conf/v3"
 )
 
 var build = "develop"
@@ -25,15 +29,18 @@ func main() {
 
 	events := logger.Events{
 		Error: func(ctx context.Context, r logger.Record) {
-			log.Info(ctx, "********* SEND ALERT *********")
+			log.Info(ctx, "******* SEND ALERT ******")
 		},
 	}
 
 	traceIDFunc := func(ctx context.Context) string {
-		return ""
+		return web.GetTraceID(ctx)
 	}
 
-	log = logger.NewWithEvents(os.Stdout, logger.LevelInfo, "SALES-INFO", traceIDFunc, events)
+	log = logger.NewWithEvents(os.Stdout, logger.LevelInfo, "SALES-API", traceIDFunc, events)
+
+	// -------------------------------------------------------------------------
+
 	ctx := context.Background()
 
 	if err := run(ctx, log); err != nil {
@@ -43,6 +50,10 @@ func main() {
 }
 
 func run(ctx context.Context, log *logger.Logger) error {
+
+	// -------------------------------------------------------------------------
+	// GOMAXPROCS
+
 	log.Info(ctx, "startup", "GOMAXPROCS", runtime.GOMAXPROCS(0), "build", build)
 
 	// -------------------------------------------------------------------------
@@ -104,6 +115,49 @@ func run(ctx context.Context, log *logger.Logger) error {
 	expvar.NewString("build").Set(build)
 
 	// -------------------------------------------------------------------------
+	// Database Support
+
+	log.Info(ctx, "startup", "status", "initializing database support", "host", cfg.DB.Host)
+
+	//db, err := db.Open(db.Config{
+	//	User:         cfg.DB.User,
+	//	Password:     cfg.DB.Password,
+	//	Host:         cfg.DB.Host,
+	//	Name:         cfg.DB.Name,
+	//	MaxIdleConns: cfg.DB.MaxIdleConns,
+	//	MaxOpenConns: cfg.DB.MaxOpenConns,
+	//	DisableTLS:   cfg.DB.DisableTLS,
+	//})
+	//if err != nil {
+	//	return fmt.Errorf("connecting to db: %w", err)
+	//}
+	//defer func() {
+	//	log.Info(ctx, "shutdown", "status", "stopping database support", "host", cfg.DB.Host)
+	//	db.Close()
+	//}()
+
+	// -------------------------------------------------------------------------
+	// Initialize authentication support
+
+	log.Info(ctx, "startup", "status", "initializing authentication support")
+
+	// Simple keystore versus using Vault.
+	ks, err := keystore.NewFS(os.DirFS(cfg.Auth.KeysFolder))
+	if err != nil {
+		return fmt.Errorf("reading keys: %w", err)
+	}
+
+	authCfg := auth.Config{
+		Log:       log,
+		KeyLookup: ks,
+	}
+
+	auth, err := auth.New(authCfg)
+	if err != nil {
+		return fmt.Errorf("constructing auth: %w", err)
+	}
+
+	// -------------------------------------------------------------------------
 	// Start Debug Service
 
 	go func() {
@@ -126,6 +180,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 		Build:    build,
 		Shutdown: shutdown,
 		Log:      log,
+		Auth:     auth,
 	}
 
 	apiMux := v1.APIMux(cfgMux, handlers.Routes{})
