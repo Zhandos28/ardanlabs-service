@@ -5,6 +5,7 @@ import (
 	"github.com/Zhandos28/ardanlabs-service/business/web/v1/auth"
 	"github.com/Zhandos28/ardanlabs-service/business/web/v1/response"
 	"github.com/Zhandos28/ardanlabs-service/foundation/logger"
+	"github.com/Zhandos28/ardanlabs-service/foundation/validate"
 	"github.com/Zhandos28/ardanlabs-service/foundation/web"
 	"net/http"
 )
@@ -25,15 +26,15 @@ func Errors(log *logger.Logger) web.Middleware {
 				case response.IsError(err):
 					reqErr := response.GetError(err)
 
-					//if validate.IsFieldErrors(reqErr.Err) {
-					//	fieldErrors := validate.GetFieldErrors(reqErr.Err)
-					//	er = response.ErrorDocument{
-					//		Error:  "data validation error",
-					//		Fields: fieldErrors.Fields(),
-					//	}
-					//	status = reqErr.Status
-					//	break
-					//}
+					if validate.IsFieldErrors(reqErr.Err) {
+						fieldErrors := validate.GetFieldErrors(reqErr.Err)
+						er = response.ErrorDocument{
+							Error:  "data validation error",
+							Fields: fieldErrors.Fields(),
+						}
+						status = reqErr.Status
+						break
+					}
 
 					er = response.ErrorDocument{
 						Error: reqErr.Error(),
